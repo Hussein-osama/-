@@ -1,21 +1,51 @@
-const Stripe = require('stripe');
 const Cart = require('../models/Cart');
-// In your payment controller file, e.g., paymentController.js
-const stripe = require('stripe')('your_stripe_secret_key_here');
+const Payment = require('../models/Payment');
 
-exports.createPaymentIntent = async (req, res) => {
-    const { amount } = req.body; // Amount to charge (in cents)
+// Controller to handle payment
+const PaymentController = {
 
-    try {
-        const paymentIntent = await stripe.paymentIntents.create({
-            amount: amount, // Amount in cents
-            currency: 'usd', // Change this to your desired currency
-            // Add additional options if needed
-        });
+    // Process payment
+    async processPayment(req, res) {
+        try {
+            // Find the cart for the user (req.userId is assumed to come from auth middleware)
+            const cart = await Cart.findOne({ user: req.userId }).populate('items.item');
+            if (!cart) {
+                return res.status(400).json({ error: 'Cart not found' });
+            }
 
-        res.status(200).json({ clientSecret: paymentIntent.client_secret });
-    } catch (error) {
-        console.error('Error creating payment intent:', error);
-        res.status(500).json({ error: 'Payment intent creation failed' });
+            // Calculate total price
+            let totalAmount = 0;
+            const items = cart.items.map(cartItem => {
+                const price = cartItem.item.price * cartItem.quantity;
+                totalAmount += price;
+                return {
+                    item: cartItem.item._id,
+                    quantity: cartItem.quantity,
+                    price: cartItem.item.price
+                };
+            });
+
+            // Create a new payment record
+            const payment = new Payment({
+                user: req.userId,  // Assuming the userId comes from auth middleware
+                items: items,
+                totalAmount: totalAmount
+            });
+
+            // Save payment
+            await payment.save();
+
+            // Clear the cart after payment is processed
+            cart.items = [];
+            await cart.save();
+
+            // Return the payment details in the response
+            res.status(201).json({ message: 'Payment successfully processed', payment });
+        } catch (error) {
+            console.error('Error processing payment:', error);
+            res.status(500).json({ error: 'Error processing payment' });
+        }
     }
 };
+
+module.exports = PaymentController;
