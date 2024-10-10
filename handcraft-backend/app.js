@@ -17,5 +17,9 @@ app.use('/api', require('./routes/categoryRoutes')); // Optional
 app.use('/api', userRoutes);
 app.use('/api', cartRoutes);
 app.use('/api', paymentRoutes);
+
+mongoose.connect('mongodb+srv://so7hsoh:seso12003@cluster0.ixrcw.mongodb.net/', { useNewUrlParser: true, useUnifiedTopology: true });
+
+
 const PORT = process.env.PORT || 3060;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
