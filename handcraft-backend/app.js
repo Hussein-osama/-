@@ -1,5 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
+const cors = require('cors');
+
 const connectDB = require('./config/db');
 const cartRoutes = require('./routes/cartRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -9,6 +12,7 @@ connectDB();
 
 // Middleware
 app.use(express.json());
+app.use(cors());
 
 // Routes
 app.use('/api', require('./routes/authRoutes'));
@@ -18,7 +22,6 @@ app.use('/api', userRoutes);
 app.use('/api', cartRoutes);
 app.use('/api', paymentRoutes);
 
-mongoose.connect('mongodb+srv://so7hsoh:seso12003@cluster0.ixrcw.mongodb.net/', { useNewUrlParser: true, useUnifiedTopology: true });
 
 
 const PORT = process.env.PORT || 3060;

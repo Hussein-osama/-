@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Cart = require('../models/Cart'); // Assuming Cart model exists
 const Payment = require('../models/Payment');
-const authMiddleware = require('../middleware/auth');
+const authMiddleware = require('../middleware/authMiddleware');
 
 // POST /api/payments
 router.post('/payments', authMiddleware, async (req, res) => {
